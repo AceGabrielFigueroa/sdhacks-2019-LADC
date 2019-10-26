@@ -31,6 +31,7 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
     String currentPhotoPath;
+    private TextView mTextViewResult; //hold http get response
 
     private File createImageFile() throws IOException {
         // Create an image file name
@@ -77,6 +78,36 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //init http get/post request
+        mTextViewResult = findViewById(R.id.text_view_result);
+        OkHttpClient client = new OkHttpClient();
+
+        String url = "https://api.edamam.com/api/food-database/parser?upc=028400048026&app_id=ef713db9&app_key=6db7c214c7e5be5f9e131a0314d4ccdc"
+
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        client.newCall(request).enqueue(new Callback(){
+           @Override
+            public void onFailure(Call call, IOEException e){
+                e.printStackTrace();
+           }
+           @Override
+            public void onResponse(Call call, Response response) throws IOEException {
+                if (response.isSuccessful()){
+                    final String myResponse = response.body().string();
+
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mTextViewResult.setText(myResponse);
+                        }
+                    })
+                }
+           }
+        });
 
         //dispatchTakePictureIntent();
 
