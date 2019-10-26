@@ -30,8 +30,15 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 public class MainActivity extends AppCompatActivity {
     String currentPhotoPath;
+    private TextView mTextViewResult; //hold http get response
 
     private File createImageFile() throws IOException {
         // Create an image file name
@@ -84,6 +91,38 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         final File img = dispatchTakePictureIntent();
+        //init http get/post request
+        mTextViewResult = findViewById(R.id.text_view_result);
+        OkHttpClient client = new OkHttpClient();
+
+        String url = "https://api.edamam.com/api/food-database/parser?upc=028400048026&app_id=ef713db9&app_key=6db7c214c7e5be5f9e131a0314d4ccdc";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        client.newCall(request).enqueue(new Callback(){
+           //@Override
+            public void onFailure(Call call, IOException e){
+                e.printStackTrace();
+           }
+           //@Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()){
+                    final String myResponse = response.body().string();
+
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mTextViewResult.setText(myResponse);
+                        }
+                    });
+                }
+           }
+        });
+
+        //dispatchTakePictureIntent();
+
 
         // Detector
         Button btn = (Button) findViewById(R.id.button);
@@ -101,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
                 myImageView.setImageBitmap(myBitmap);
 
                 // Setup Barcode detector
-                TextView txtView = (TextView) findViewById(R.id.txtView);
+                TextView txtView = (TextView) findViewById(R.id.text_view_result);
 
                 BarcodeDetector detector =
                         new BarcodeDetector.Builder(getApplicationContext())
