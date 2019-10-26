@@ -23,6 +23,11 @@ import androidx.core.content.FileProvider;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
+import com.google.gson.JsonArray;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
                 photoFile = createImageFile();
             } catch (IOException ex) {
                 // Error occurred while creating the File
-            //...
+                //...
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
@@ -85,44 +90,12 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
-        @Override
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         final File img = dispatchTakePictureIntent();
-        //init http get/post request
-        mTextViewResult = findViewById(R.id.text_view_result);
-        OkHttpClient client = new OkHttpClient();
-
-        String url = "https://api.edamam.com/api/food-database/parser?upc=028400048026&app_id=ef713db9&app_key=6db7c214c7e5be5f9e131a0314d4ccdc";
-
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
-
-        client.newCall(request).enqueue(new Callback(){
-           //@Override
-            public void onFailure(Call call, IOException e){
-                e.printStackTrace();
-           }
-           //@Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()){
-                    final String myResponse = response.body().string();
-
-                    MainActivity.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mTextViewResult.setText(myResponse);
-                        }
-                    });
-                }
-           }
-        });
-
-        //dispatchTakePictureIntent();
-
 
         // Detector
         Button btn = (Button) findViewById(R.id.button);
@@ -147,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
                                 .setBarcodeFormats(0)
                                 .build();
 
-                if(!detector.isOperational()){
+                if (!detector.isOperational()) {
                     txtView.setText("Cannot do it lmao");
                     return;
                 }
@@ -158,7 +131,83 @@ public class MainActivity extends AppCompatActivity {
 
                 // Decode
                 Barcode thisCode = barcodes.valueAt(0);
-                txtView.setText(thisCode.rawValue);
+                //txtView.setText(thisCode.rawValue);
+
+                //init http get/post request
+                mTextViewResult = findViewById(R.id.text_view_result);
+                OkHttpClient client = new OkHttpClient();
+
+                String url = "https://api.edamam.com/api/food-database/parser?upc=" +
+                        thisCode.rawValue +
+                        "&app_id=ef713db9&app_key=6db7c214c7e5be5f9e131a0314d4ccdc";
+
+
+                Request request = new Request.Builder()
+                        .url(url)
+                        .build();
+
+                client.newCall(request).enqueue(new Callback() {
+                    //@Override
+                    public void onFailure(Call call, IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    //@Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        if (response.isSuccessful()) {
+                            final String myResponse = response.body().toString();
+                            JSONObject jsonResponse = null;
+                            JSONObject imgObject = null;
+                            JSONArray hints = null;
+                            String imgUrl = null;
+                            try{
+                                jsonResponse= new JSONObject(myResponse);
+                            } catch (JSONException err){
+                                System.out.println("Couldn't read JSON");
+                            }
+
+                            if(jsonResponse != null && jsonResponse.has("hints")){
+                                try{
+                                    hints = jsonResponse.getJSONArray("hints");
+                                } catch(JSONException err){
+                                    System.out.println("Couldn't get hints");
+                                }
+                            }
+
+                            if(hints != null && hints.length() != 0){
+                                try{
+                                    imgObject = hints.getJSONObject(0);
+                                }
+                                catch (JSONException err){
+                                    System.out.println("Couldn't get index");
+                                }
+                            }
+
+                            if(imgObject != null && imgObject.has("image")){
+                                try{
+                                    imgUrl = imgObject.get("image").toString();
+                                }
+                                catch (JSONException err){
+                                    System.out.println("No img");
+                                }
+                            }
+                            else{
+                                // generic food image if none exists
+                                imgUrl = "https://downtowncl.org/wp-content/uploads/2016/08/1977_Food-Drink-Generic-Logo.jpg";
+                            }
+                            final String finalUrl = new String(imgUrl);
+
+
+                            //make a request for the image
+                            MainActivity.this.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mTextViewResult.setText(finalUrl);
+                                }
+                            });
+                        }
+                    }
+                });
             }
         });
 
