@@ -26,6 +26,7 @@ import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
     static final int REQUEST_TAKE_PHOTO = 1;
 
-    private void dispatchTakePictureIntent() {
+    private File dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
@@ -69,8 +70,12 @@ public class MainActivity extends AppCompatActivity {
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+
+                return photoFile;
             }
         }
+
+        return null;
     }
 
         @Override
@@ -78,18 +83,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //dispatchTakePictureIntent();
+        final File img = dispatchTakePictureIntent();
 
         // Detector
         Button btn = (Button) findViewById(R.id.button);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Load Image
                 ImageView myImageView = (ImageView) findViewById(R.id.imgview);
+                /*
                 Bitmap myBitmap = BitmapFactory.decodeResource(
                         getApplicationContext().getResources(),
                         R.drawable.bags);
+                */
+
+                Bitmap myBitmap = BitmapFactory.decodeFile(img.getAbsolutePath());
                 myImageView.setImageBitmap(myBitmap);
 
                 // Setup Barcode detector
