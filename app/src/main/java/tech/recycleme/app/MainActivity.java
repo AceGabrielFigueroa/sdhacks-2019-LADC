@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.widget.Button;
@@ -41,28 +42,36 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import java.net.URL;
+
 public class MainActivity extends AppCompatActivity {
+    static final int REQUEST_TAKE_PHOTO = 1;
     String currentPhotoPath;
     private TextView mTextViewResult; //hold http get response
 
+    /*
+    @PURPOSE: Creates the associated image file to save to the app.
+    @RESULT:  Returns a file where the image is stored. Returns null if failed.
+     */
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
+                imageFileName,      /* prefix */
+                ".jpg",      /* suffix */
+                storageDir          /* directory */
         );
 
         // Save a file: path for use with ACTION_VIEW intents
-        currentPhotoPath = image.getAbsolutePath();
         return image;
     }
 
-    static final int REQUEST_TAKE_PHOTO = 1;
-
+    /*
+    @PURPOSE: Uses the camera API to take a picture of barcode.
+    @RESULT: Returns a file where the image is stored. Returns null if failed.
+     */
     private File dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
@@ -72,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 photoFile = createImageFile();
             } catch (IOException ex) {
+                // TODO: Do error for picture capture.
                 // Error occurred while creating the File
                 //...
             }
@@ -95,21 +105,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final File img = dispatchTakePictureIntent();
+        currentPhotoPath = dispatchTakePictureIntent().getAbsolutePath();
 
         // Detector
         Button btn = (Button) findViewById(R.id.button);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ImageView myImageView = (ImageView) findViewById(R.id.imgview);
+                final ImageView myImageView = (ImageView) findViewById(R.id.imgview);
                 /*
                 Bitmap myBitmap = BitmapFactory.decodeResource(
                         getApplicationContext().getResources(),
                         R.drawable.bags);
                 */
 
-                Bitmap myBitmap = BitmapFactory.decodeFile(img.getAbsolutePath());
+                Bitmap myBitmap = BitmapFactory.decodeFile(currentPhotoPath);
                 myImageView.setImageBitmap(myBitmap);
 
                 // Setup Barcode detector
@@ -155,47 +165,54 @@ public class MainActivity extends AppCompatActivity {
                     //@Override
                     public void onResponse(Call call, Response response) throws IOException {
                         if (response.isSuccessful()) {
-                            final String myResponse = response.body().toString();
+                            final String myResponse = response.body().string();
                             JSONObject jsonResponse = null;
                             JSONObject imgObject = null;
                             JSONArray hints = null;
                             String imgUrl = null;
-                            try{
-                                jsonResponse= new JSONObject(myResponse);
-                            } catch (JSONException err){
-                                System.out.println("Couldn't read JSON");
+
+                            try {
+                                Log.d("Parsing", myResponse);
+                                jsonResponse = new JSONObject(myResponse);
+                            } catch (JSONException err) {
+                               Log.e("JSON PARSE", "Couldn't read JSON");
                             }
 
-                            if(jsonResponse != null && jsonResponse.has("hints")){
-                                try{
+                            if (jsonResponse != null && jsonResponse.has("hints")) {
+                                try {
                                     hints = jsonResponse.getJSONArray("hints");
-                                } catch(JSONException err){
+                                    Log.d("HINTS", hints.toString());
+                                } catch (JSONException err) {
                                     System.out.println("Couldn't get hints");
                                 }
                             }
 
-                            if(hints != null && hints.length() != 0){
-                                try{
+                            if (hints != null && hints.length() != 0) {
+                                try {
                                     imgObject = hints.getJSONObject(0);
-                                }
-                                catch (JSONException err){
+                                    Log.d("IMAGE OBJECT", imgObject.toString());
+
+                                } catch (JSONException err) {
                                     System.out.println("Couldn't get index");
                                 }
                             }
 
-                            if(imgObject != null && imgObject.has("image")){
-                                try{
-                                    imgUrl = imgObject.get("image").toString();
+                            if (imgObject != null && imgObject.has("food")) {
+                                try {
+                                    JSONObject foodObj = imgObject.getJSONObject("food");
+                                    imgUrl = foodObj.get("image").toString();
+                                    Log.d("IMAGE URL", imgUrl);
+
+                                } catch (JSONException err) {
+                                    Log.w("PARSE", "Image not found!");
                                 }
-                                catch (JSONException err){
-                                    System.out.println("No img");
-                                }
-                            }
-                            else{
+                            } else {
                                 // generic food image if none exists
                                 imgUrl = "https://downtowncl.org/wp-content/uploads/2016/08/1977_Food-Drink-Generic-Logo.jpg";
                             }
                             final String finalUrl = new String(imgUrl);
+                            final Bitmap bm = BitmapFactory.decodeStream(
+                                new URL(finalUrl).openConnection().getInputStream());
 
 
                             //make a request for the image
@@ -203,6 +220,8 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void run() {
                                     mTextViewResult.setText(finalUrl);
+                                    myImageView.setImageBitmap(bm);
+
                                 }
                             });
                         }
@@ -212,6 +231,4 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-
-
 }
