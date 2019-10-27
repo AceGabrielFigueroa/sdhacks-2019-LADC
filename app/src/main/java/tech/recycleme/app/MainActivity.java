@@ -1,5 +1,6 @@
 package tech.recycleme.app;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,6 +10,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -16,8 +18,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
@@ -40,10 +45,13 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
+
+import static java.lang.Thread.sleep;
 
 public class MainActivity extends AppCompatActivity {
     static final int REQUEST_TAKE_PHOTO = 1;
-    String currentPhotoPath;
+    private File file;
     private TextView mTextViewResult; //hold http get response
 
     /*
@@ -102,34 +110,98 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /* BOTTOM NAVIGATION */
-        BottomNavigationView bottomNavigationView = (BottomNavigationView)
-                findViewById(R.id.bottom_navigation);
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 
-        bottomNavigationView.setOnNavigationItemSelectedListener(
-                new BottomNavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                        switch (item.getItemId()) {
-                            case R.id.camera:
-                                currentPhotoPath = dispatchTakePictureIntent().getAbsolutePath();
+        /* Navigstion Setup */
+        BottomNavigationView navigationView = (BottomNavigationView) findViewById(R.id.bottom_navigation);
+        navigationView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
 
-                                break;
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new InfoFragment()).commit();
+    }
 
-                            case R.id.home:
+    private BottomNavigationView.OnNavigationItemSelectedListener onNavigationItemSelectedListener
+            = new BottomNavigationView.OnNavigationItemSelectedListener() {
+        @Override
+        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            Fragment selectedFragment = null;
 
-                                break;
+            switch (item.getItemId()) {
+                case R.id.info:
+                    selectedFragment = new InfoFragment();
+                    break;
 
-                                /*
-                            case R.id.action_music:
+                case R.id.camera:
+                    file =  dispatchTakePictureIntent();
 
-                                break;
+                    selectedFragment = new InfoFragment();
 
-                                 */
+                    break;
+                case R.id.directions:
+                                                        selectedFragment = new DirectionFragment();
+                    break;
+            }
+
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, selectedFragment).commit();
+            return true;
+        }
+    };
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_TAKE_PHOTO && resultCode == Activity.RESULT_OK)
+        {
+            Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+            BarcodeDetector detector =
+                    new BarcodeDetector.Builder(getApplicationContext())
+                            .setBarcodeFormats(0)
+                            .build();
+
+            Frame frame = new Frame.Builder().setBitmap(myBitmap).build();
+            SparseArray<Barcode> barcodes = detector.detect(frame);
+
+            Barcode thisCode = barcodes.valueAt(0);
+
+            /* Build Api Call */
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+                    .url("https://sd-hacks-257117.appspot.com/getRecyclable/" +
+                            thisCode.rawValue)
+                    .build();
+
+
+            /* Call */
+            client.newCall(request).enqueue(new Callback() {
+                public void onFailure(Call call, IOException e) {
+                    e.printStackTrace();
+                }
+
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        String myResponse = response.body().string();
+                        JSONObject jsonResponse;
+
+                        try {
+                            jsonResponse = new JSONArray(myResponse).getJSONObject(0);
+
+                            Log.d("PARSED", "DOING");
+                        } catch (JSONException err) {
+
                         }
-                        return false;
+
+                        InfoFragment.value = "AAAAAA";
+                        Log.d("PARSED", myResponse);
                     }
-                });
+                }
+
+            });
+
+        }
+    }
+
 
         /*
         // Detector
@@ -249,6 +321,4 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });*/
-
-    }
 }
