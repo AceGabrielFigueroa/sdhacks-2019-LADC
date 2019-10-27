@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
@@ -133,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.camera:
                     file =  dispatchTakePictureIntent();
 
+                    InfoFragment.value = "Loading results ...";
                     selectedFragment = new InfoFragment();
 
                     break;
@@ -186,13 +188,20 @@ public class MainActivity extends AppCompatActivity {
 
                         try {
                             jsonResponse = new JSONArray(myResponse).getJSONObject(0);
-
+                            InfoFragment.value = Integer.parseInt(jsonResponse.get("recyclable").toString()) == 0 ? "Not Recycable!" : "Recycable!";
                             Log.d("PARSED", "DOING");
                         } catch (JSONException err) {
 
                         }
 
-                        InfoFragment.value = "AAAAAA";
+
+                        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                        if (currentFragment instanceof InfoFragment) {
+                            FragmentTransaction fragTransaction =   getSupportFragmentManager().beginTransaction();
+                            fragTransaction.detach(currentFragment);
+                            fragTransaction.attach(currentFragment);
+                            fragTransaction.commit();
+                        }
                         Log.d("PARSED", myResponse);
                     }
                 }

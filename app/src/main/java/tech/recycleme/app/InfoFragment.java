@@ -9,7 +9,7 @@ import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 
 public class InfoFragment extends Fragment {
-    public static String value = "aaa";
+    public static String value = "To get started, please scan a barcode.";
     TextView textView;
 
     public void onCreate(Bundle savedInstanceState){
