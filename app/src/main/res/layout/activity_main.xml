@@ -3,6 +3,27 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     xmlns:android="http://schemas.android.com/apk/res/android">
+    <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle" >
+        <gradient
+            android:type="linear"
+            android:centerX="21%"
+            android:startColor="#FF6ABD6E"
+            android:centerColor="#FF69B784"
+            android:endColor="#FF66A5D9"
+            android:angle="45"/>
+    </shape>
+
+    -------------------------------------------------
+    <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle" >
+        <gradient
+            android:type="radial"
+            android:centerX="50%"
+            android:centerY="50%"
+            android:startColor="#FF6ABD6E"
+            android:centerColor="#FF69B784"
+            android:endColor="#FF66A5D9"
+            android:gradientRadius="21"/>
+    </shape>
 
     <TextView android:text=""
         android:layout_width="wrap_content"
