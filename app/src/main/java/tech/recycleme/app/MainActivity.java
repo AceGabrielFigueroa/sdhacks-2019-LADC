@@ -50,8 +50,6 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_TAKE_PHOTO = 1;
     String currentPhotoPath;
     private TextView mTextViewResult; //hold http get response
-    private final int SPLASH_DISPLAY_LENGTH = 1000;
-
 
     /*
     @PURPOSE: Creates the associated image file to save to the app.
