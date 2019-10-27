@@ -1,32 +1,28 @@
 package tech.recycleme.app;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.util.SparseArray;
-import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
-import com.google.gson.JsonArray;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,7 +30,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -105,22 +100,44 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // setContentView(R.layout.activity_main);
         setContentView(R.layout.activity_main);
 
-        currentPhotoPath = dispatchTakePictureIntent().getAbsolutePath();
+        /* BOTTOM NAVIGATION */
+        BottomNavigationView bottomNavigationView = (BottomNavigationView)
+                findViewById(R.id.bottom_navigation);
 
+        bottomNavigationView.setOnNavigationItemSelectedListener(
+                new BottomNavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.camera:
+                                currentPhotoPath = dispatchTakePictureIntent().getAbsolutePath();
+
+                                break;
+
+                            case R.id.home:
+
+                                break;
+
+                                /*
+                            case R.id.action_music:
+
+                                break;
+
+                                 */
+                        }
+                        return false;
+                    }
+                });
+
+        /*
         // Detector
         Button btn = (Button) findViewById(R.id.button);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final ImageView myImageView = (ImageView) findViewById(R.id.imgview);
-                /*
-                Bitmap myBitmap = BitmapFactory.decodeResource(
-                        getApplicationContext().getResources(),
-                        R.drawable.bags);
-                */
 
                 Bitmap myBitmap = BitmapFactory.decodeFile(currentPhotoPath);
                 myImageView.setImageBitmap(myBitmap);
@@ -231,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             }
-        });
+        });*/
 
     }
 }

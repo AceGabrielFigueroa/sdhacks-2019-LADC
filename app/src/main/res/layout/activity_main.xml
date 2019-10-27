@@ -22,4 +22,11 @@
         android:id="@+id/imgview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
+    <include
+        android:id="@+id/navigation"
+        layout="@layout/bottomnavbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
 </LinearLayout>
