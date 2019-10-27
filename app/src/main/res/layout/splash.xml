@@ -10,15 +10,21 @@
     <ImageView
         android:id="@+id/imageView5"
         android:layout_width="match_parent"
-        android:layout_height="406dp"
-        android:src="@drawable/bottle" />
+        android:layout_height="300sp"
+        android:src="@drawable/bottle"
+        android:background="re"/>
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Recycle Me"
         android:gravity="center"
-        android:textSize="52dp"
-        android:fontFamily=""/>
+        android:textSize="30sp"
+        android:fontFamily="@font/farro"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/rectanglesmooth"
+        android:paddingLeft="50dp"
+        android:paddingRight="50dp"
+        android:layout_marginTop="40dp"/>
 </LinearLayout>
