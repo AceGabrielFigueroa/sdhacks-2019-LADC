@@ -11,8 +11,7 @@
         android:id="@+id/imageView5"
         android:layout_width="match_parent"
         android:layout_height="300sp"
-        android:src="@drawable/bottle"
-        android:background="re"/>
+        android:src="@drawable/bottle"/>
 
     <TextView
         android:id="@+id/textView"
@@ -22,7 +21,7 @@
         android:gravity="center"
         android:textSize="30sp"
         android:fontFamily="@font/farro"
-        android:textColor="#FFFFFF"
+        android:textColor="#FFF"
         android:background="@drawable/rectanglesmooth"
         android:paddingLeft="50dp"
         android:paddingRight="50dp"
